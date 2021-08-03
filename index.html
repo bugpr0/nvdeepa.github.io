@@ -1,1 +1,616 @@
-Hello D3
+<!doctype html>
+<html lang="en">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="/style.css" rel="stylesheet" type="text/css">
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"
+            integrity="sha512-iBAeBWWWFb8HqSBcrqcz98iIpuVH1la39dEYHtyQ/pGpeCQTQVvLJOWAuhv2Q7JSHp9k7hWA7sGxU3hHJe+tFg=="
+            crossOrigin="anonymous" referrerpolicy="no-referrer"></script>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <title>The Titanic Tragedy - A Survival Analysis </title>
+</head>
+<!-- <style> circle {fill: lightblue; stroke: black;} </style>  -->
+<body onload="init()">
+<h1>The Titanic Tragedy - A Survival Analysis</h1>
+<p> How did the survival rate relate to the age, gender and passenger class of the passengers ? </p>
+<button onclick="triggerTransition()">Explore Age Relationship</button>
+    <div class="well well-sm">
+        <div id="survival-focus">
+            <div><strong>Survival statistics - Passengers with complete data</strong></div>
+            <div id="survival" class="inline-block-align-top"></div>
+            <div id="survival-ratio" class="inline-block-align-top"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="inline-block-align-top">
+                <div><strong>A bar chart of the gender of passengers</strong>
+                </div>
+                <div id="genderHist"></div>
+            </div>
+            <div class="inline-block-align-top">
+                <div><strong>A bar chart of the passenger class (travel class) of passengers</strong>
+                </div>
+                <div id="PclassHist"></div>
+            </div>
+        </div>
+    </div>
+<div class="row">
+    <div class="col-md-12">
+        <div><strong>A histogram of the distribution of ages of the passengers</strong>
+            <div class="interaction-help-text hidden">
+                <div>Select an age range on the histogram to know more about the survival statistics in that age range</div>
+            </div>
+        </div>
+        <div id="AgeHist"></div>
+    </div>
+</div>
+
+<script>
+"use strict" ;
+
+/*
+ Common variables and constants
+ */
+var fullData, maxAge, minAge, isSexBarsClickable = false, isPclassBarsClickable = false,
+    interactionInitialized = false;
+var survivalLabels = ["Survived", "Perished"], sexLabels = ["Female", "Male"],
+    pclassMap = {
+        1: "Upper",
+        2: "Middle",
+        3: "Lower"
+    }, {stackedAgeHistogram, stackedPclassBarChart, stackedSexBarChart, survivalChart, survivalStack} = {
+        survivalChart: {},
+        survivalStack: {},
+        ageHistogram: {},
+        sexChart: {},
+        pclassChart: {},
+        stackedAgeHistogram: {},
+        stackedSexBarChart: {},
+        stackedPclassBarChart: {}
+    }, dataFilters = {
+        ageRange: [],
+        sex: [],
+        pclass: []
+    };
+
+/* Common functions */
+/*
+Common calculation functions
+*/
+function getSurvivalCount(data) {
+    const survived = d3.sum(data, function (d) {
+        return d.Survived;
+    });
+    return [{
+        category: "Survived",
+        count: survived
+    }, {
+        category: "Perished",
+        count: data.length - survived
+    }];
+}
+
+
+function drawSC(data){
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 800 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom;
+
+    // set the ranges
+    var x = d3.scaleBand()
+        .range([0, width])
+        .padding(0.1);
+    var y = d3.scaleLinear()
+        .range([height, 0]);
+
+    // append the svg object to the body of the page
+    // append a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("div#survival").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+
+        x.domain(data.map(function(d) { return d.category; }));
+        y.domain([0, d3.max(data, function(d) { return d.count; })]);
+        // append the rectangles for the bar chart
+        let bars = svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("g")
+        bars.append("rect")
+            .attr("class", "bar")
+            .attr("x", function(d){
+                return x.bandwidth()/3+x(d.category)})
+            .attr("width", x.bandwidth()/3)
+            .attr("y", function(d) { return y(d.count); })
+            .attr("height", function(d) { return height - y(d.count); })
+            .attr("fill",function(d){
+                if (d.category==="Survived")
+                { return "#4daf4a";}
+                else {return "#940b14"}})
+
+
+    bars.append("text")
+            .text(function(d){ return d.count})
+            .attr("x", function(d){
+                return x.bandwidth()/2+x(d.category)})
+            .attr("y", function(d){
+                return y(d.count);
+            })
+            .attr("font-family" , "sans-serif")
+            .attr("font-size" , "14px")
+            .attr("text-anchor", "middle")
+
+        console.log(svg.select(".bar"))
+
+        // add the x Axis
+
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x))
+            ;
+
+        // add the y Axis
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        // add annotation
+    const annotations = [
+        {
+            note: {
+                label: "Total:152, Gender:F-152,M-0, Class:Lower-72,Middle-30,Upper-50, Age: <60-148,<6-32",
+                title: "Survival Stats",
+                wrap: 200,  // try something smaller to see text split in several lines
+                padding: 10   // More = text lower
+
+            },
+            //color: ["#cc0000"],
+            x: 200,
+            y: 100,
+            dy: -10,
+            dx: 10
+        }];
+    const makeAnnotations = d3.annotation()
+        .annotations(annotations);
+    svg.append("g")
+        .call(makeAnnotations);
+
+
+
+}
+
+/* createSurvivalChart(data) */
+function createSurvivalChart(data){
+    // Draw the main survival section
+    const survivalData = getSurvivalCount(data);
+    console.log("survivaldata[1]:"+survivalData[1].category+":"+survivalData[1].count);
+    drawSC(survivalData);
+
+}
+
+/* draw hist */
+function drawHistogram(div_f,csv_f,ax,ay,title,label) {
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 400 - margin.left - margin.right,
+        height = 470 - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    var svg = d3.select(div_f)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    // Parse the Data
+
+
+    d3.csv(csv_f).then(function (data) {
+        console.log(data);
+
+        // List of subgroups = header of the csv files = soil condition here
+        var subgroups = data.columns.slice(1);
+
+        // List of groups = species here = value of the first column called group -> I show them on the X axis
+        var groups = d3.map(data, function (d) {
+            return (d.group)
+        }).keys()
+
+        // Add X axis
+        var x = d3.scaleBand()
+            .domain(groups)
+            .range([0, width])
+            .padding([0.2])
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x).tickSizeOuter(0));
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+            .domain([0, height])
+            .range([height, 0]);
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        // color palette = one color per subgroup
+        var color = d3.scaleOrdinal()
+            .domain(subgroups)
+            .range(["#4daf4a", "#940b14"])
+
+        //stack the data? --> stack per subgroup
+        var stackedData = d3.stack()
+            .keys(subgroups)
+            (data)
+
+        // Show the bars
+        var stackedBars = svg.append("g")
+            .selectAll("g")
+            // Enter in the stack data = loop key per key = group per group
+            .data(stackedData)
+            .enter().append("g")
+            .attr("fill", function (d) {
+                return color(d.key);
+            })
+            .selectAll("rect")
+            // enter a second time = loop subgroup per subgroup to add all rectangles
+            .data(function (d) {
+                return d;
+            })
+            .enter().append("rect")
+            .attr("x", function (d) {
+                return x(d.data.group)+x.bandwidth()/4;
+            })
+            .attr("y", function (d) {
+                return y(d[1]);
+            })
+            .attr("height", function (d) {
+                return y(d[0]) - y(d[1]);
+            })
+            .attr("width", x.bandwidth()/2)
+            .attr("id","stackedbars")
+
+
+
+
+
+        // add annotation
+        const annotations = [
+            {
+
+                note: {
+                    label: label,
+                    title: title,
+                    wrap: 150,  // try something smaller to see text split in several lines
+                    padding: 1,   // More = text lower
+
+                },
+                connector: {
+                    end: "none",        // none, or arrow or dot
+                    type: "curve",       // Line or curve
+                    points: 0,           // Number of break in the curve
+                    lineType : "vertical"
+                },
+
+                x: ax,
+                y: ay,
+                dy: -10,
+                dx: 10
+            }];
+
+        const makeAnnotations = d3.annotation()
+            .type(d3.annotationLabel)
+            .annotations(annotations);
+        svg.append("g")
+            .call(makeAnnotations);
+
+
+    })
+        .catch(function(error){
+            console.log(error);
+        })
+    ;
+}
+/*
+* The main entry init point
+*/
+
+
+function drawPclassHistogram() {
+    drawHistogram("#PclassHist", "pc.csv", 80, 205, "Survivors / Deaths Lower:72/146 Upper:50/57", "More Lower Class Passengers Died")
+}
+function drawGenderHistogram(){
+    drawHistogram("#genderHist","gender.csv",100,270,"152 Females survivors, 419 Male deaths","Only Females Survived");
+}
+
+function triggerTransition(){
+    d3.selectAll("div#survival").remove()
+    d3.selectAll("div#genderHist").remove()
+    d3.selectAll("div#PclassHist").remove()
+    d3.selectAll("strong").remove()
+    d3.selectAll("survival-focus").remove()
+    d3.selectAll("button").remove()
+
+    drawAgeHistogramStacked()
+    d3.selectAll("rect")
+        .transition()
+        .delay(100)
+        .duration(2000)
+        .attr("height", function (d,i) {console.log(data[i].Survived)
+            return height - y(d.length);
+        })
+}
+function drawAgeHistogramStacked(){
+
+
+        // set the dimensions and margins of the graph
+        var margin = {top: 10, right: 30, bottom: 30, left: 40},
+        width = 800 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        var svg = d3.select("#AgeHist")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+        const survivedbins=[32,
+            3,
+            3,
+            4,
+            5,
+            6,
+            19,
+            21,
+            21,
+            9,
+            11,
+            7,
+            5,
+            6,
+            4,
+            3,
+            0,
+            0,
+            1,
+            0]
+
+
+        const tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("class", "svg-tooltip")
+            .style("position", "absolute")
+            .style("visibility", "hidden");
+
+
+
+        // get the data
+        d3.csv("tested.csv").then(function(data) {
+
+
+
+            // X axis: scale and draw:
+            var x = d3.scaleLinear()
+                .domain([0, 102])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
+                .range([0, width]);
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            // set the parameters for the histogram
+            var histogram = d3.histogram()
+                .value(function (d) {
+                    return d.Age;
+                })   // I need to give the vector of value
+                .domain(x.domain())  // then the domain of the graphic
+                .thresholds(x.ticks(20)); // then the numbers of bins
+
+            // And apply this function to data to get the bins
+            var bins = histogram(data);
+
+            // Y axis: scale and draw:
+            var y = d3.scaleLinear()
+                .range([height, 0]);
+            y.domain([0, d3.max(bins, function (d) {
+                return d.length;
+            })]);   // d3.hist has to be called before the Y axis obviously
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // append the bar rectangles to the svg element
+            svg.selectAll("rect")
+                .data(bins)
+                .enter()
+                .append("rect")
+                .attr("x", 1)
+                .attr("id","agebars")
+                .attr("transform", function (d) {
+                    return "translate(" + x(d.x0) + "," + y(d.length) + ")";
+                })
+                .attr("width", function (d) {
+                    return x(d.x1) - x(d.x0) - 1;
+                })
+                .attr("height", function (d,i) {console.log(data[i].Survived)
+                    return height - y(d.length);
+                })
+                .style("fill", ""+" #f2b407")
+
+            // select all rect
+            svg.selectAll("rect")
+                .on("mouseover", function(d) {
+                    // change the selection style
+                    d3.select(this)
+                        .attr('stroke-width', '2')
+                        .attr("stroke", "white");
+                    // make the tooltip visible and update its text
+                    tooltip
+                        .style("visibility", "visible")
+                        .text(`survived: ${d.length}\ndied: 40\n`);
+                        //.text(`count: ${d.length}\nx0: ${d.x0}\nx1: ${d.x1}`);
+                })
+                .on("mousemove", function() {
+                    tooltip
+                        .style("top", d3.event.pageY - 10 + "px")
+                        .style("left", d3.event.pageX + 10 + "px");
+                })
+                .on("mouseout", function() {
+                    // change the selection style
+                    d3.select(this).attr('stroke-width', '0');
+
+                    tooltip.style("visibility", "hidden");
+                });
+                })
+
+.catch(function(error){
+        console.log(error);})
+
+
+}
+
+// Create Event Handlers for mouse
+function handleMouseOver(d, i) {  // Add interactivity
+
+    // Use D3 to select element, change color and size
+    d3.select(this).attr({
+        fill: "orange",
+        r: radius * 2
+    });
+
+    // Specify where to put label of text
+    svg.append("text").attr({
+        id: "t" + d.x + "-" + d.y + "-" + i,  // Create an id for text so we can select it later for removing on mouseout
+        x: function() { return xScale(d.x) - 30; },
+        y: function() { return yScale(d.y) - 15; }
+    })
+        .text(function() {
+            return [d.x, d.y];  // Value of the text
+        });
+}
+
+function handleMouseOut(d, i) {
+    // Use D3 to select element, change color back to normal
+    d3.select(this).attr({
+        fill: "black",
+        r: radius
+    });
+
+    // Select text by id and then remove
+    d3.select("#t" + d.x + "-" + d.y + "-" + i).remove();  // Remove text location
+}
+
+async function init() {
+    console.log("start");
+
+    var data = await d3.csv("tested.csv", function (row) {
+        row.PassengerId = +row.PassengerId;
+        row.Survived = +row.Survived;
+        row.SurvivedBool = row.Survived === 1;
+        row.Pclass = +row.Pclass;
+        row.Age = row.Age === "" ? null : +row.Age;
+        row.SibSp = +row.SibSp;
+        row.Parch = +row.Parch;
+        row.Fare = +row.Fare;
+        return row;
+    });
+    //console.log(data[0]);
+    const fullData = data;
+    const maxAge = d3.max(data.map(data => data.Age));
+    const minAge = d3.min(data.map(data => data.Age));
+    console.log(minAge, maxAge);
+    /**
+     * Fill in the number of data, mainly for narratives text
+     */
+    function initDrawDataLabels() {
+        const numOfSamplesWithAge = fullData.filter(function(d){ return d.Age !== null;}).length;
+        console.log("numOfSamplesWithAge:"+ numOfSamplesWithAge);
+        d3.selectAll(".rows-of-dataset").html(fullData.length);
+        d3.selectAll(".rows-of-age-data").html(numOfSamplesWithAge);
+    }
+
+    /**
+     * Calculate and set the number of data to the current data selection info panel
+     */
+    function drawDataLabels(data) {
+        d3.selectAll(".current-rows-of-dataset").html(data.length);
+
+// Calculate the  age range filter
+        const ageRange = dataFilters.ageRange;
+        console.log("ageRange:"+ageRange+",dataFilters.ageRange.length:"+dataFilters.ageRange.length);
+        if ($.isEmptyObject(ageRange) || !$.isArray(ageRange)) {
+            d3.selectAll(".age-not-restricted-label").classed("hidden", false);
+            d3.selectAll(".age-range").classed("hidden", true);
+        } else {
+            d3.selectAll(".age-not-restricted-label").classed("hidden", true);
+            d3.selectAll(".age-range").classed("hidden", false);
+            d3.selectAll(".lower-age").html(ageRange[0]);
+            d3.selectAll(".upper-age").html(ageRange[1]);
+        }
+
+// Calculate the sex filter
+        const sex = dataFilters.sex;
+        if ($.isEmptyObject(sex) || !$.isArray(sex)) {
+            d3.selectAll(".sex-not-restricted-label").classed("hidden", false);
+            d3.selectAll(".selected-sex-label").classed("hidden", true);
+        } else {
+            d3.selectAll(".sex-not-restricted-label").classed("hidden", true);
+            d3.selectAll(".selected-sex-label").classed("hidden", false);
+            d3.selectAll(".selected-male-label").classed("hidden", sex.indexOf("male") < 0);
+            d3.selectAll(".selected-female-label").classed("hidden", sex.indexOf("female") < 0);
+        }
+
+// Calculate the passenger class filter
+        const pclass = dataFilters.pclass;
+        if ($.isEmptyObject(pclass) || !$.isArray(pclass)) {
+            d3.selectAll(".pclass-not-restricted-label").classed("hidden", false);
+            d3.selectAll("#selected-pclass-label").classed("hidden", true);
+        } else if ($.isArray(pclass)) {
+            d3.selectAll(".pclass-not-restricted-label").classed("hidden", true);
+            d3.select("#selected-pclass-label").classed("hidden", false);
+            d3.select("#selected-pclass-label")
+                .selectAll("span")
+                .remove();
+            d3.select("#selected-pclass-label")
+                .selectAll("span")
+                .data(pclass.sort(), function (d) {
+                    return d;
+                })
+                .enter()
+                .append("span")
+                .html(function (d) {
+                    return pclassMap[d] + '<span class="comma">, </span>';
+                });
+        }
+    }
+
+
+    initDrawDataLabels();
+    drawDataLabels(data);
+
+    createSurvivalChart(data);
+    drawPclassHistogram();
+    drawGenderHistogram();
+    //drawAgeHistogramStacked(data);
+    //createGenderChart(data);
+    //createPclassChart(data);
+    console.log("end");
+}
+
+</script>
+</body>
+</html>

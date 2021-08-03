@@ -1,0 +1,169 @@
+/* Elements */
+body {
+    padding: 0 50px;
+}
+
+#narrative > div {
+    display:none;
+}
+
+.well {
+    margin-bottom: 10px;
+}
+
+.panel-heading, .alert {
+    padding-top: 6px;
+    padding-bottom: 7px;
+}
+
+.interaction-help-text {
+    padding-left: 10px;
+    font-size: 90%;
+}
+
+#interaction-explain.alert {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+
+#interaction-explain.alert button {
+    position: relative;
+    top: -2px;
+}
+
+.panel {
+    margin-bottom: 10px;
+}
+
+#current-data-selection .panel-heading button {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    background: white;
+}
+
+#current-data-selection .panel-body {
+    padding-top : 5px;
+    padding-bottom: 5px;
+}
+
+.selection-stats {
+    font-weight: bold;
+    font-size: 110%;
+}
+
+rect.clickable {
+    cursor: pointer;
+}
+
+.legend-box {
+    fill: none;
+    stroke: #000;
+}
+
+.axis-label {
+    font-size: 80%;
+}
+
+/* Text Containers */
+#survival-focus-title {
+    padding: 5px 10px;
+    padding-top: 2px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.interaction-help-text {
+    font-size: 90%;
+}
+
+/* Chart Colors */
+rect.dimmed {
+    opacity: .2;
+}
+
+.survived.bar-group, rect.survived {
+    fill: #4daf4a;
+}
+
+.perished.bar-group, rect.perished{
+    fill: #e41a1c;
+    opacity: .75;
+}
+/*.bar { fill: steelblue; opacity: .0}*/
+
+.brush rect {
+    fill: #000;
+    opacity: .125;
+}
+
+/* Axes */
+.axis {
+    font-size: 75%;
+}
+
+div.inline-block-align-top {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#survival .y.axis path {
+    display: none;
+}
+
+#survival .x.axis path {
+    fill: none;
+    stroke: #000;
+}
+
+#survival .x.axis line {
+    stroke: #000;
+}
+
+#stacked-age-chart .x.axis path, #stacked-age-chart .y.axis path {
+    fill: none;
+    stroke: #000;
+}
+
+#stacked-age-chart .x.axis line, #stacked-age-chart .y.axis line {
+    stroke: #000;
+}
+
+#stacked-sex-chart .x.axis path, #stacked-sex-chart  .y.axis path {
+    fill: none;
+    stroke: #000;
+}
+
+#stacked-sex-chart  .x.axis line, #stacked-sex-chart  .y.axis line {
+    stroke: #000;
+}
+
+#stacked-pclass-chart .x.axis path, #stacked-pclass-chart  .y.axis path {
+    fill: none;
+    stroke: #000;
+}
+
+#stacked-pclass-chart  .x.axis line, #stacked-pclass-chart  .y.axis line {
+    stroke: #000;
+}
+
+/* comma */
+#selected-pclass-label span:last-of-type span.comma {
+    display: none;
+}
+
+.svg-tooltip {
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple   Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background: rgba(69,77,93,.9);
+    border-radius: .1rem;
+    color: #fff;
+    display: block;
+    font-size: 14px;
+    max-width: 600px;
+    padding: .2rem .4rem;
+    position: absolute;
+    text-overflow: ellipsis;
+    white-space: pre;
+    z-index: 300;
+    visibility: hidden;
+}
