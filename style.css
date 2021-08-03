@@ -30,16 +30,28 @@ body {
 #interaction-explain.alert button {
     position: relative;
     top: -2px;
+    font-weight: bold;
+    fill: chocolate;
 }
 
 .panel {
     margin-bottom: 10px;
 }
+#current-data-selection button {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: white;
+    font-weight: bold;
+    fill: chocolate;
+}
+
 
 #current-data-selection .panel-heading button {
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     background: white;
+    font-weight: bold;
+    fill: chocolate;
 }
 
 #current-data-selection .panel-body {
@@ -136,6 +148,13 @@ div.inline-block-align-top {
 
 #stacked-sex-chart  .x.axis line, #stacked-sex-chart  .y.axis line {
     stroke: #000;
+}
+.button_css
+{
+    background-color: black;
+    color: white;
+    width: 150px;
+    height: 40px;
 }
 
 #stacked-pclass-chart .x.axis path, #stacked-pclass-chart  .y.axis path {
